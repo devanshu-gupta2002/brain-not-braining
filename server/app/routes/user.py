@@ -14,13 +14,24 @@ def get_db():
     finally:
         db.close()
 
-@router.put("/document", response_model=UserDocument)
-def update_document(document: UserDocument, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    current_user.document = document.document
-    db.commit()
-    db.refresh(current_user)
-    return current_user
+# @router.put("/user/document", response_model=UserDocument)
+# def update_document(
+#     document: UserDocument, 
+#     db: Session = Depends(get_db), 
+#     current_user: User = Depends(get_current_user)
+# ):
+#     user = db.query(User).filter(User.id == current_user.id).first()
+#     if not user:
+#         raise HTTPException(status_code=404, error="User not found")
 
-@router.get("/document", response_model=UserDocument)
-def get_document(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    return current_user
+#     user.document = document.document
+#     db.commit()
+#     db.refresh(user)
+#     return user
+
+# @router.get("/user/document", response_model=UserDocument)
+# def get_document(
+#     db: Session = Depends(get_db), 
+#     current_user: User = Depends(get_current_user)
+# ):
+#     return current_user
