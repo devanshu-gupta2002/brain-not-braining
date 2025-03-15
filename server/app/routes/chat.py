@@ -27,26 +27,47 @@ def get_document(
     db: Session = Depends(get_db), 
     current_user: User = Depends(get_current_user)
 ):
-    return get_parsed_doc(db, current_user)
+    response = get_parsed_doc(db, current_user)
+
+    # Ensure response is a dictionary before adding the field
+    if isinstance(response, dict):
+        response["file"] = True
+    else:
+        response = {"data": response, "file": True}
+
+    return response
+
+ALLOWED_EXTENSIONS = {"application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"}
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 
 @router.post("/chat/upload")
-def upload_pdf(
+async def upload_file(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    if file.content_type != "application/pdf":
-        raise HTTPException(status_code=400, detail="File must be a PDF")
-    
-    file_location = f"uploads/{file.filename}"
+    # Check file type
+    if file.content_type not in ALLOWED_EXTENSIONS:
+        raise HTTPException(status_code=400, detail="Only PDF, DOC, and DOCX files are allowed")
+
+    # Read the file content to enforce size limit
+    content = await file.read()
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="File size exceeds 5MB limit")
+
+    # Define file storage location
+    file_extension = file.filename.split(".")[-1]
+    file_location = f"uploads/{current_user.id}_{file.filename}"  # Unique filename
     os.makedirs("uploads", exist_ok=True)
 
-    with open(file_location, "wb+") as file_object:
-        file_object.write(file.file.read())
+    # Save the file
+    with open(file_location, "wb") as file_object:
+        file_object.write(content)
 
+    # Parse the document
     parsed_data = parse_document(file_location, db, current_user)
 
-    # Remove the file after updating the database
+    # Remove the file after processing
     try:
         os.remove(file_location)
     except Exception as e:

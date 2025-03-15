@@ -11,24 +11,22 @@ nest_asyncio.apply()
 load_dotenv()
 
 def get_parsed_doc(db: Session, current_user):
-    """Retrieve the stored document from the user, parse it, and query using LlamaIndex."""
     user = db.query(User).filter(User.id == current_user.id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
     if not user.document:
-        raise HTTPException(status_code=404, detail="Document is empty")
+        return {"message": "Document is empty", "file": False}
 
     try:
-        document_data = json.loads(user.document)  # Convert stored JSON string back to a dictionary
-        document = Document(**document_data)  # Reconstruct the Document object
+        document_data = json.loads(user.document)
+        document = Document(**document_data)
         return document
     except json.JSONDecodeError:
         raise HTTPException(status_code=500, detail="Failed to parse stored document")
 
 
 def query_document(question: str, db: Session, current_user):
-    """Retrieve the stored document from the user, parse it, and query using LlamaIndex."""
     user = db.query(User).filter(User.id == current_user.id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -37,8 +35,8 @@ def query_document(question: str, db: Session, current_user):
         raise HTTPException(status_code=404, detail="Document is empty")
 
     try:
-        document_data = json.loads(user.document)  # Convert stored JSON string back to a dictionary
-        document = Document(**document_data)  # Reconstruct the Document object
+        document_data = json.loads(user.document)
+        document = Document(**document_data)
     except json.JSONDecodeError:
         raise HTTPException(status_code=500, detail="Failed to parse stored document")
 
