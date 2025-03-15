@@ -10,11 +10,11 @@ class LoginRequest(BaseModel):
     email: str
     password: str
 
-@router.post("/signup", response_model=UserResponse)
+@router.post("/auth/signup", response_model=UserResponse)
 def signup(user: UserCreate):
     return create_user(user)
 
-@router.post("/login", response_model=dict)
+@router.post("/auth/login", response_model=dict)
 def login(login_data: LoginRequest):
     user = authenticate_user(UserLogin(email=login_data.email, password=login_data.password))
     
@@ -26,4 +26,4 @@ def login(login_data: LoginRequest):
         )
     
     access_token = create_access_token(data={"sub": user.email})
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"token": access_token, "token_type": "bearer"}
