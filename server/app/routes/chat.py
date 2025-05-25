@@ -6,7 +6,7 @@ import os
 from ..models.user import User
 from ..utils.security import get_current_user
 from ..schemas.user import UserDocument
-from ..services.nlp_processing import parse_document, query_document, get_parsed_doc
+from ..services.nlp_processing import parse_document, query_document, get_parsed_doc, remove_document
 from ..database.session import SessionLocal
 
 router = APIRouter()
@@ -50,24 +50,19 @@ async def upload_file(
     if file.content_type not in ALLOWED_EXTENSIONS:
         raise HTTPException(status_code=400, detail="Only PDF, DOC, and DOCX files are allowed")
 
-    # Read the file content to enforce size limit
     content = await file.read()
     if len(content) > MAX_FILE_SIZE:
         raise HTTPException(status_code=400, detail="File size exceeds 5MB limit")
 
-    # Define file storage location
     file_extension = file.filename.split(".")[-1]
     file_location = f"uploads/{current_user.id}_{file.filename}"  # Unique filename
     os.makedirs("uploads", exist_ok=True)
 
-    # Save the file
     with open(file_location, "wb") as file_object:
         file_object.write(content)
 
-    # Parse the document
     parsed_data = parse_document(file_location, db, current_user)
 
-    # Remove the file after processing
     try:
         os.remove(file_location)
     except Exception as e:
@@ -83,3 +78,11 @@ def get_answer(
 ):
     answer = query_document(request.question, db, current_user)  # Use request.question
     return {"answer": answer}
+
+@router.delete("/chat/delete")
+def delete_document(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    response = remove_document(db, current_user)
+    return response

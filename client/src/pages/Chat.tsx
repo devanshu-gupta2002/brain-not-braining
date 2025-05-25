@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useChatStore } from '../store/chatStore';
-import { getChatStatus, sendMessage, uploadFile } from '../api/chat';
+import { getChatStatus, sendMessage, uploadFile, deleteFile } from '../api/chat';
 
 function Chat() {
   const navigate = useNavigate();
@@ -59,6 +59,16 @@ function Chat() {
     }
   };
 
+  const handleDeleteFile = async () => {
+    try {
+      await deleteFile();
+      setFileStatus(false, undefined);
+      clearChat();
+    } catch (error) {
+      console.error('Failed to delete file:', error);
+    }
+  };
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!question.trim() || !hasFile || isLoading) return;
@@ -102,11 +112,12 @@ function Chat() {
           <Brain className="h-8 w-8 text-blue-500" />
           <h1 className="text-xl font-bold">Brain</h1>
         </div>
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4 overflow-x-auto md:overflow-visible">
           {!hasFile && (
-            <label className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 transition-colors">
+            <label className="flex-shrink-0 flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 transition-colors">
               <Upload className="h-5 w-5 mr-2" />
-              Upload File
+              <span className="hidden sm:inline">Upload File</span>
+              <span className="sm:hidden">Upload</span>
               <input
                 type="file"
                 accept=".pdf,.docx"
@@ -117,16 +128,13 @@ function Chat() {
             </label>
           )}
           {fileName && (
-            <div className="flex items-center px-3 py-1.5 bg-gray-700 rounded-lg">
+            <div className="flex-shrink-0 flex items-center px-3 py-1.5 bg-gray-700 rounded-lg">
               <FileText className="h-4 w-4 text-gray-400 mr-2" />
-              <span className="text-sm text-gray-300 max-w-[150px] truncate">
+              <span className="text-sm text-gray-300 max-w-[100px] sm:max-w-[150px] truncate">
                 {fileName}
               </span>
               <button
-                onClick={() => {
-                  setFileStatus(false, undefined);
-                  clearChat();
-                }}
+                onClick={handleDeleteFile}
                 className="ml-2 text-gray-400 hover:text-red-500 transition-colors"
               >
                 <Trash className="h-4 w-4" />
@@ -135,10 +143,10 @@ function Chat() {
           )}
           <button
             onClick={handleLogout}
-            className="flex items-center px-4 py-2 text-gray-300 hover:text-white transition-colors"
+            className="flex-shrink-0 flex items-center px-4 py-2 text-gray-300 hover:text-white transition-colors"
           >
             <LogOut className="h-5 w-5 mr-2" />
-            Logout
+            <span className="hidden sm:inline">Logout</span>
           </button>
         </div>
       </header>

@@ -17,3 +17,8 @@ export const sendMessage = async (question: string) => {
   const response = await api.post<ChatResponse>('/chat/ask', { question });
   return response.data;
 };
+
+export const deleteFile = async () => {
+  const response = await api.delete('/chat/delete');
+  return response.data;
+};

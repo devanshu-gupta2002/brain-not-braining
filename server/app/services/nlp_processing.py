@@ -69,3 +69,15 @@ def parse_document(filepath: str, db: Session, current_user):
     db.refresh(user)
     
     return {"message": "Document stored successfully"}
+
+
+def remove_document(db: Session, current_user):
+    user = db.query(User).filter(User.id == current_user.id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user.document = None
+    db.commit()
+    db.refresh(user)
+    
+    return {"message": "Document removed successfully"}
